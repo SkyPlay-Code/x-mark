@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --text-light: #555;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --border-color: #e0e0e0;
+            --green: #28a745;
+            --orange: #fd7e14;
+            --red: #dc3545;
+            --blue: #007bff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        #search-bar {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 15px;
+            margin: 20px auto 0;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            font-size: 1em;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        #search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .student-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .student-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 1.4em;
+        }
+
+        .student-card .percentage {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        .subject {
+            margin-bottom: 12px;
+        }
+
+        .subject-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .subject-info .subject-name {
+            font-weight: 600;
+            color: var(--text-light);
+            flex-basis: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .subject-info .subject-marks {
+            font-weight: 600;
+            color: var(--blue);
+        }
+
+        .progress-bar-container {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--green);
+            height: 100%;
+            width: 0; /* Initial width */
+            border-radius: 5px;
+            transition: width 1s ease-out;
+            text-align: right;
+            color: white;
+            font-size: 0.7em;
+            line-height: 12px;
+            padding-right: 5px;
+        }
+        
+        .progress-bar.ai {
+            background-color: var(--orange); /* Different color for AI */
+        }
+
+        .no-results {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--text-light);
+            padding: 30px;
+            grid-column: 1 / -1; /* Span all columns */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Animations for progress bars on load */
+        .student-card.visible .progress-bar {
+            /* width will be set by JS */
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 15px;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            .students-grid {
+                grid-template-columns: 1fr; /* Single column on smaller screens */
+            }
+             .student-card h2 {
+                font-size: 1.2em;
+            }
+            .student-card .percentage {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Student Performance Dashboard</h1>
+            <input type="text" id="search-bar" placeholder="Search by student name...">
+        </header>
+
+        <main>
+            <div id="students-grid" class="students-grid">
+                <!-- Student cards will be injected here by JavaScript -->
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2023 Student Analytics. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Extracted and structured data from your XML
+        const studentData = [
+            { name: "Adarsh Kumar Sahoo", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "HINDI COURSE-A", th: 65, pr: 20, total: 85 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 73, pr: 20, total: 93 }, socialScience: { th: 69, pr: 20, total: 89 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 88.2 },
+            { name: "Adhyasha Behra", english: { th: 65, pr: 20, total: 85 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS BASIC", th: 57, pr: 20, total: 77 }, science: { th: 60, pr: 20, total: 80 }, socialScience: { th: 64, pr: 20, total: 84 }, ai: { th: 37, pr: 50, total: 87 }, percentage: 83.6 },
+            { name: "Akhya Routray", english: { th: 63, pr: 20, total: 83 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 76, pr: 20, total: 96 }, science: { th: 76, pr: 20, total: 96 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 92.4 },
+            { name: "Ankit Kumar Mallick", english: { th: 55, pr: 20, total: 75 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 17, pr: 20, total: 37 }, science: { th: 32, pr: 20, total: 52 }, socialScience: { th: 46, pr: 20, total: 66 }, ai: { th: 31, pr: 50, total: 81 }, percentage: 62.2 },
+            { name: "Ananya Samal", english: { th: 54, pr: 20, total: 74 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS BASIC", th: 28, pr: 20, total: 48 }, science: { th: 19, pr: 20, total: 39 }, socialScience: { th: 31, pr: 20, total: 51 }, ai: { th: 26, pr: 49, total: 75 }, percentage: 60.8 },
+            { name: "Arolipsa Mallik", english: { th: 40, pr: 20, total: 60 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS STANDARD", th: 27, pr: 20, total: 47 }, science: { th: 21, pr: 20, total: 41 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 29, pr: 48, total: 77 }, percentage: 56.0 },
+            { name: "Arpita Jena", english: { th: 66, pr: 20, total: 86 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 77, pr: 20, total: 97 }, socialScience: { th: 72, pr: 20, total: 92 }, ai: { th: 49, pr: 50, total: 99 }, percentage: 91.0 },
+            { name: "Ashutosh Pal", english: { th: 58, pr: 20, total: 78 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 51, pr: 20, total: 71 }, science: { th: 74, pr: 20, total: 94 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 46, pr: 50, total: 96 }, percentage: 84.0 },
+            { name: "Ayushi Senapati", english: { th: 69, pr: 20, total: 89 }, lang2: { name: "HINDI COURSE-A", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS STANDARD", th: 70, pr: 20, total: 90 }, science: { th: 73, pr: 20, total: 93 }, socialScience: { th: 63, pr: 20, total: 83 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 89.4 },
+            { name: "Ayushman Bej", english: { th: 52, pr: 20, total: 72 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 74, pr: 20, total: 94 }, math: { name: "MATHEMATICS STANDARD", th: 26, pr: 20, total: 46 }, science: { th: 46, pr: 20, total: 66 }, socialScience: { th: 51, pr: 20, total: 71 }, ai: { th: 21, pr: 50, total: 71 }, percentage: 69.8 },
+            { name: "Baisakhi P. Mallik", english: { th: 46, pr: 20, total: 66 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 58, pr: 20, total: 78 }, math: { name: "MATHEMATICS STANDARD", th: 65, pr: 20, total: 85 }, science: { th: 54, pr: 20, total: 74 }, socialScience: { th: 42, pr: 20, total: 62 }, ai: { th: 40, pr: 49, total: 89 }, percentage: 73.0 },
+            { name: "Balaram Behra", english: { th: 29, pr: 20, total: 49 }, lang2: { name: "HINDI COURSE-A", th: 39, pr: 20, total: 59 }, math: { name: "MATHEMATICS STANDARD", th: 24, pr: 20, total: 44 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 33, pr: 20, total: 53 }, ai: { th: 17, pr: 49, total: 66 }, percentage: 50.4 },
+            { name: "Barsha Priyadarshinee", english: { th: 59, pr: 20, total: 79 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 61, pr: 20, total: 81 }, science: { th: 56, pr: 20, total: 76 }, socialScience: { th: 59, pr: 20, total: 79 }, ai: { th: 45, pr: 50, total: 95 }, percentage: 77.6 },
+            { name: "Bhargabi Bhabani Jena", english: { th: 43, pr: 20, total: 63 }, lang2: { name: "HINDI COURSE-A", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS STANDARD", th: 18, pr: 20, total: 38 }, science: { th: 53, pr: 20, total: 73 }, socialScience: { th: 44, pr: 20, total: 64 }, ai: { th: 42, pr: 49, total: 91 }, percentage: 64.2 },
+            { name: "Biraj Kumar Mahapatra", english: { th: 63, pr: 20, total: 83 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 62, pr: 20, total: 82 }, science: { th: 68, pr: 20, total: 88 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 84.4 },
+            { name: "Debansi Mohanty", english: { th: 71, pr: 20, total: 91 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 78, pr: 20, total: 98 }, math: { name: "MATHEMATICS STANDARD", th: 67, pr: 20, total: 87 }, science: { th: 57, pr: 20, total: 77 }, socialScience: { th: 50, pr: 20, total: 70 }, ai: { th: 39, pr: 50, total: 89 }, percentage: 84.6 },
+            { name: "Guneet Gaurav Tarai", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 54, pr: 20, total: 74 }, math: { name: "MATHEMATICS STANDARD", th: 20, pr: 20, total: 40 }, science: { th: 47, pr: 20, total: 67 }, socialScience: { th: 52, pr: 20, total: 72 }, ai: { th: 38, pr: 50, total: 88 }, percentage: 66.6 },
+            { name: "Jigyanshu Samantray", english: { th: 34, pr: 20, total: 54 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 41, pr: 20, total: 61 }, math: { name: "MATHEMATICS STANDARD", th: 13, pr: 20, total: 33 }, science: { th: 7, pr: 20, total: 27 }, socialScience: { th: 26, pr: 20, total: 46 }, ai: { th: 18, pr: 48, total: 66 }, percentage: 44.2 },
+            { name: "Jyotiraditya Dey", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "HINDI COURSE-A", th: 49, pr: 20, total: 69 }, math: { name: "MATHEMATICS STANDARD", th: 57, pr: 20, total: 77 }, science: { th: 70, pr: 20, total: 90 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 80.4 },
+            { name: "Meghabarna Patra", english: { th: 72, pr: 20, total: 92 }, lang2: { name: "HINDI COURSE-A", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 60, pr: 20, total: 80 }, science: { th: 65, pr: 20, total: 85 }, socialScience: { th: 75, pr: 20, total: 95 }, ai: { th: 46, pr: 50, total: 96 }, percentage: 86.6 },
+            { name: "Kumari Monika Madhei", english: { th: 54, pr: 20, total: 74 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 40, pr: 20, total: 60 }, science: { th: 55, pr: 20, total: 75 }, socialScience: { th: 55, pr: 20, total: 75 }, ai: { th: 38, pr: 50, total: 88 }, percentage: 71.4 },
+            { name: "Muskan Pradhan", english: { th: 70, pr: 20, total: 90 }, lang2: { name: "HINDI COURSE-A", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS STANDARD", th: 30, pr: 20, total: 50 }, science: { th: 58, pr: 20, total: 78 }, socialScience: { th: 71, pr: 20, total: 91 }, ai: { th: 32, pr: 50, total: 82 }, percentage: 78.6 },
+            { name: "Om Mishra", english: { th: 40, pr: 20, total: 60 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 27, pr: 20, total: 47 }, science: { th: 28, pr: 20, total: 48 }, socialScience: { th: 46, pr: 20, total: 66 }, ai: { th: 31, pr: 50, total: 81 }, percentage: 60.4 },
+            { name: "Omm Narayn Pattnaik", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 60, pr: 20, total: 80 }, science: { th: 54, pr: 20, total: 74 }, socialScience: { th: 68, pr: 20, total: 88 }, ai: { th: 34, pr: 50, total: 84 }, percentage: 84.0 },
+            { name: "Piyush Swain", english: { th: 43, pr: 20, total: 63 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 71, pr: 20, total: 91 }, math: { name: "MATHEMATICS STANDARD", th: 19, pr: 20, total: 39 }, science: { th: 45, pr: 20, total: 65 }, socialScience: { th: 49, pr: 20, total: 69 }, ai: { th: 29, pr: 49, total: 78 }, percentage: 65.4 },
+            { name: "Pratik Kumar Sahoo", english: { th: 51, pr: 20, total: 71 }, lang2: { name: "HINDI COURSE-A", th: 47, pr: 20, total: 67 }, math: { name: "MATHEMATICS STANDARD", th: 44, pr: 20, total: 64 }, science: { th: 58, pr: 20, total: 78 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 39, pr: 49, total: 88 }, percentage: 72.4 },
+            { name: "Pratikshya Priyadarsini", english: { th: 65, pr: 20, total: 85 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 23, pr: 20, total: 43 }, science: { th: 59, pr: 20, total: 79 }, socialScience: { th: 66, pr: 20, total: 86 }, ai: { th: 34, pr: 48, total: 82 }, percentage: 73.2 },
+            { name: "Pratima Dash", english: { th: 47, pr: 20, total: 67 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS BASIC", th: 26, pr: 20, total: 46 }, science: { th: 20, pr: 20, total: 40 }, socialScience: { th: 60, pr: 20, total: 80 }, ai: { th: 28, pr: 48, total: 76 }, percentage: 63.2 },
+            { name: "Pratysuh Kumar Sahoo", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 75, pr: 20, total: 95 }, math: { name: "MATHEMATICS STANDARD", th: 39, pr: 20, total: 59 }, science: { th: 60, pr: 20, total: 80 }, socialScience: { th: 65, pr: 20, total: 85 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 80.6 },
+            { name: "Pratyusha Prusty", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "HINDI COURSE-A", th: 56, pr: 20, total: 76 }, math: { name: "MATHEMATICS STANDARD", th: 51, pr: 20, total: 71 }, science: { th: 62, pr: 20, total: 82 }, socialScience: { th: 47, pr: 20, total: 67 }, ai: { th: 37, pr: 50, total: 87 }, percentage: 75.4 },
+            { name: "Pritinsa Rout", english: { th: 47, pr: 20, total: 67 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 47, pr: 20, total: 67 }, science: { th: 44, pr: 20, total: 64 }, socialScience: { th: 36, pr: 20, total: 56 }, ai: { th: 39, pr: 49, total: 88 }, percentage: 70.8 },
+            { name: "Purnima Priydarshini Lenka", english: { th: 76, pr: 20, total: 96 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 79, pr: 20, total: 99 }, math: { name: "MATHEMATICS STANDARD", th: 55, pr: 20, total: 75 }, science: { th: 67, pr: 20, total: 87 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 89.4 },
+            { name: "Ratikanta Gouda", english: { th: 38, pr: 20, total: 58 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 70, pr: 20, total: 90 }, math: { name: "MATHEMATICS STANDARD", th: 8, pr: 20, total: 28 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 18, pr: 47, total: 65 }, percentage: 54.6 },
+            { name: "Risav Mohanty", english: { th: 68, pr: 20, total: 88 }, lang2: { name: "HINDI COURSE-A", th: 65, pr: 20, total: 85 }, math: { name: "MATHEMATICS BASIC", th: 63, pr: 20, total: 83 }, science: { th: 66, pr: 20, total: 86 }, socialScience: { th: 64, pr: 20, total: 84 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 85.2 },
+            { name: "Ronit Kumar Sethi", english: { th: 62, pr: 20, total: 82 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 78, pr: 20, total: 98 }, math: { name: "MATHEMATICS STANDARD", th: 7, pr: 20, total: 27 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 35, pr: 20, total: 55 }, ai: { th: 33, pr: 50, total: 83 }, percentage: 61.8 },
+            { name: "Sai Ram Mohanty", english: { th: 56, pr: 20, total: 76 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 71, pr: 20, total: 91 }, math: { name: "MATHEMATICS STANDARD", th: 28, pr: 20, total: 48 }, science: { th: 47, pr: 20, total: 67 }, socialScience: { th: 48, pr: 20, total: 68 }, ai: { th: 25, pr: 49, total: 74 }, percentage: 70.0 },
+            { name: "Saisrita Mohanty", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "HINDI COURSE-A", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS BASIC", th: 30, pr: 20, total: 50 }, science: { th: 25, pr: 20, total: 45 }, socialScience: { th: 54, pr: 20, total: 74 }, ai: { th: 34, pr: 49, total: 83 }, percentage: 67.2 },
+            { name: "Sanchita Parida", english: { th: 76, pr: 20, total: 96 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 78, pr: 20, total: 98 }, science: { th: 72, pr: 20, total: 92 }, socialScience: { th: 65, pr: 20, total: 85 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 94.2 },
+            { name: "Sarmistha Rout", english: { th: 50, pr: 20, total: 70 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 76, pr: 20, total: 96 }, math: { name: "MATHEMATICS BASIC", th: 29, pr: 20, total: 49 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 50, pr: 20, total: 70 }, ai: { th: 27, pr: 49, total: 76 }, percentage: 66.8 },
+            { name: "Shamuka Naik", english: { th: 34, pr: 20, total: 54 }, lang2: { name: "HINDI COURSE-A", th: 30, pr: 20, total: 50 }, math: { name: "MATHEMATICS STANDARD", th: 17, pr: 20, total: 37 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 32, pr: 20, total: 52 }, ai: { th: 31, pr: 47, total: 78 }, percentage: 48.0 },
+            { name: "Shri Shreyash Swain", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 42, pr: 20, total: 62 }, science: { th: 55, pr: 20, total: 75 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 41, pr: 49, total: 90 }, percentage: 81.0 },
+            { name: "Shreyashi Swain", english: { th: 66, pr: 20, total: 86 }, lang2: { name: "HINDI COURSE-A", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 48, pr: 20, total: 68 }, science: { th: 53, pr: 20, total: 73 }, socialScience: { th: 45, pr: 20, total: 65 }, ai: { th: 41, pr: 48, total: 89 }, percentage: 74.6 },
+            { name: "Sonali Ipsita", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "HINDI COURSE-A", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS BASIC", th: 54, pr: 20, total: 74 }, science: { th: 51, pr: 20, total: 71 }, socialScience: { th: 73, pr: 20, total: 93 }, ai: { th: 41, pr: 50, total: 91 }, percentage: 80.4 },
+            { name: "Soumya Ranjan Jena", english: { th: 37, pr: 20, total: 57 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 52, pr: 20, total: 72 }, math: { name: "MATHEMATICS STANDARD", th: 10, pr: 20, total: 30 }, science: { th: 14, pr: 20, total: 34 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 17, pr: 47, total: 64 }, percentage: 48.2 },
+            { name: "Sudhansu Sekhar Rout", english: { th: 59, pr: 20, total: 79 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS STANDARD", th: 48, pr: 20, total: 68 }, science: { th: 49, pr: 20, total: 69 }, socialScience: { th: 55, pr: 20, total: 75 }, ai: { th: 19, pr: 49, total: 68 }, percentage: 76.6 },
+            { name: "Sunandan Jena", english: { th: 27, pr: 20, total: 47 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 35, pr: 20, total: 55 }, math: { name: "MATHEMATICS STANDARD", th: 15, pr: 20, total: 35 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 31, pr: 20, total: 51 }, ai: { th: 17, pr: 49, total: 66 }, percentage: 47.4 },
+            { name: "Supritam Panigrahi", english: { th: 75, pr: 20, total: 95 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 80, pr: 20, total: 100 }, science: { th: 77, pr: 20, total: 97 }, socialScience: { th: 77, pr: 20, total: 97 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 97.8 },
+            { name: "Suraj Pattnaik", english: { th: 72, pr: 20, total: 92 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 76, pr: 20, total: 96 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 72, pr: 20, total: 92 }, socialScience: { th: 78, pr: 20, total: 98 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 94.2 },
+            { name: "Suvoshree Kumari", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 73, pr: 20, total: 93 }, math: { name: "MATHEMATICS BASIC", th: 53, pr: 20, total: 73 }, science: { th: 59, pr: 20, total: 79 }, socialScience: { th: 47, pr: 20, total: 67 }, ai: { th: 33, pr: 50, total: 83 }, percentage: 78.4 }
+        ];
+
+        const studentsGrid = document.getElementById('students-grid');
+        const searchBar = document.getElementById('search-bar');
+
+        function createSubjectElement(subjectNameDisplay, subjectData, isAI = false) {
+            const subjectDiv = document.createElement('div');
+            subjectDiv.classList.add('subject');
+
+            // Max marks for theory and practical vary, but total is 100 for all.
+            const totalMarks = subjectData.total;
+            const percentageOfSubject = totalMarks; // Since max is 100
+
+            subjectDiv.innerHTML = `
+                <div class="subject-info">
+                    <span class="subject-name">${subjectNameDisplay} ${subjectData.name ? '(' + subjectData.name.split(' ')[0] + ')' : ''}</span>
+                    <span class="subject-marks">Th:${subjectData.th}, Pr:${subjectData.pr} | Total: ${totalMarks}/100</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar ${isAI ? 'ai' : ''}" data-total="${percentageOfSubject}"></div>
+                </div>
+            `;
+            return subjectDiv;
+        }
+
+        function displayStudents(studentsToDisplay) {
+            studentsGrid.innerHTML = ''; // Clear existing cards
+
+            if (studentsToDisplay.length === 0) {
+                studentsGrid.innerHTML = '<p class="no-results">No students found matching your search.</p>';
+                return;
+            }
+            
+            studentsToDisplay.forEach((student, index) => {
+                const card = document.createElement('div');
+                card.classList.add('student-card');
+                card.style.animationDelay = `${index * 0.05}s`; // Stagger animation
+
+                card.innerHTML = `
+                    <h2>${student.name}</h2>
+                    <p class="percentage">${student.percentage.toFixed(1)}%</p>
+                `;
+
+                card.appendChild(createSubjectElement('English', student.english));
+                card.appendChild(createSubjectElement('Language 2', student.lang2));
+                card.appendChild(createSubjectElement('Mathematics', student.math));
+                card.appendChild(createSubjectElement('Science', student.science));
+                card.appendChild(createSubjectElement('Social Sc.', student.socialScience));
+                card.appendChild(createSubjectElement('AI (Addl.)', student.ai, true));
+                
+                studentsGrid.appendChild(card);
+
+                // Trigger progress bar animation after card is in DOM and visible
+                // Using a small timeout to ensure CSS transition applies correctly
+                setTimeout(() => {
+                    card.classList.add('visible'); // For potential future use if needed
+                    const progressBars = card.querySelectorAll('.progress-bar');
+                    progressBars.forEach(pb => {
+                        pb.style.width = `${pb.dataset.total}%`;
+                    });
+                }, 50 + index * 50); // Delay slightly more for staggered animation
+            });
+        }
+
+        searchBar.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredStudents = studentData.filter(student => 
+                student.name.toLowerCase().includes(searchTerm)
+            );
+            displayStudents(filteredStudents);
+        });
+
+        // Initial display
+        displayStudents(studentData);
+
+    </script>
+</body>
+</html>
