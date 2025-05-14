@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #3A79F0; /* Vibrant Blue */
+            --primary-light: #E0EAFC;
+            --secondary-color: #F4F7FC; /* Lightest Gray-Blue */
+            --card-bg: #ffffff;
+            --text-color: #333D48; /* Dark Bluish Gray */
+            --text-light: #5E6A79; /* Medium Bluish Gray */
+            --shadow-color: rgba(50, 50, 93, 0.1);
+            --border-color: #DEE2E6; /* Light Gray */
+            
+            --green: #34D399; /* Modern Green */
+            --orange: #FDBA74; /* Soft Orange */
+            --red: #F87171; /* Soft Red */
+            --blue-accent: #5E81F4; /* For marks, etc. */
+            --ai-color: #A855F7; /* Purple for AI */
+
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center password prompt */
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #password-protection-overlay {
+            background-color: var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #password-protection-overlay h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        #password-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            font-size: 1em;
+            font-family: var(--font-family);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #password-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(58, 121, 240, 0.3);
+        }
+
+        #password-submit {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            font-family: var(--font-family);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        #password-submit:hover {
+            background-color: #2c64d1; /* Darker primary */
+            transform: translateY(-2px);
+        }
+        
+        #password-error {
+            color: var(--red);
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        #dashboard-content {
+            width: 100%;
+            display: none; /* Hidden initially */
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px; /* Increased for better desktop view */
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 25px 20px;
+            background: linear-gradient(135deg, var(--primary-color), #2c64d1);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(58, 121, 240, 0.3);
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        #search-bar {
+            width: 100%;
+            max-width: 550px;
+            padding: 14px 20px;
+            margin: 20px auto 0;
+            border: 1px solid transparent; /* Initially transparent border */
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 30px;
+            font-size: 1.05em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            font-family: var(--font-family);
+        }
+        #search-bar::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+
+        #search-bar:focus {
+            outline: none;
+            background-color: white;
+            color: var(--text-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(58, 121, 240, 0.3);
+        }
+        #search-bar:focus::placeholder {
+            color: var(--text-light);
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); /* Slightly wider cards */
+            gap: 30px;
+        }
+
+        .student-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(50, 50, 93, 0.15);
+        }
+        
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .student-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 1.5em;
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .overall-percentage-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 15px;
+        }
+
+        .percentage-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        
+        .student-card .percentage {
+            font-size: 1.6em; /* Adjusted for circle */
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .overall-percentage-container span {
+            font-size: 0.8em;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+
+        .subjects-list {
+            margin-top: 10px;
+        }
+
+        .subject {
+            margin-bottom: 15px;
+        }
+
+        .subject-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+        .subject-info .subject-name {
+            font-weight: 500; /* slightly less bold */
+            color: var(--text-color);
+            flex-basis: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+        }
+        .subject-info .subject-name .subject-icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+            color: var(--primary-color);
+        }
+
+        .subject-info .subject-marks {
+            font-weight: 600;
+            color: var(--blue-accent);
+            font-size: 0.9em;
+        }
+
+        .progress-bar-container {
+            background-color: #e9ecef;
+            border-radius: 25px; /* pill shape */
+            height: 14px; /* slightly thicker */
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0; /* Initial width */
+            border-radius: 25px;
+            transition: width 1s ease-out, background-color 0.5s ease;
+            text-align: right;
+            color: white;
+            font-size: 0.75em;
+            line-height: 14px;
+            padding-right: 6px;
+            font-weight: 500;
+        }
+        
+        .no-results {
+            text-align: center;
+            font-size: 1.3em;
+            color: var(--text-light);
+            padding: 40px;
+            grid-column: 1 / -1; /* Span all columns */
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+         .no-results::before {
+            content: '😕'; /* Or an SVG icon */
+            display: block;
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(25px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            header h1 {
+                font-size: 2.2em;
+            }
+            .students-grid {
+                grid-template-columns: 1fr; /* Single column */
+                gap: 20px;
+            }
+            .student-card h2 {
+                font-size: 1.3em;
+            }
+            .percentage-circle {
+                width: 60px;
+                height: 60px;
+            }
+            .student-card .percentage {
+                font-size: 1.4em;
+            }
+             #password-protection-overlay {
+                padding: 20px;
+            }
+            #password-protection-overlay h2 {
+                font-size: 1.5em;
+            }
+        }
+         @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            #search-bar {
+                font-size: 0.95em;
+                padding: 12px 15px;
+            }
+            .student-card { padding: 20px; }
+            .subject-info { font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="password-protection-overlay">
+        <h2>Enter Access Code</h2>
+        <input type="password" id="password-input" placeholder="Password" autofocus>
+        <button id="password-submit">Unlock Dashboard</button>
+        <p id="password-error" style="display: none;">Incorrect password. Please try again.</p>
+    </div>
+
+    <div id="dashboard-content">
+        <!-- Dashboard HTML will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = "SkyMarks25"; // CHANGE THIS PASSWORD
+
+        // Extracted and structured data from your XML
+        const studentData = [
+            { name: "Adarsh Kumar Sahoo", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "HINDI COURSE-A", th: 65, pr: 20, total: 85 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 73, pr: 20, total: 93 }, socialScience: { th: 69, pr: 20, total: 89 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 88.2 },
+            { name: "Adhyasha Behra", english: { th: 65, pr: 20, total: 85 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS BASIC", th: 57, pr: 20, total: 77 }, science: { th: 60, pr: 20, total: 80 }, socialScience: { th: 64, pr: 20, total: 84 }, ai: { th: 37, pr: 50, total: 87 }, percentage: 83.6 },
+            { name: "Akhya Routray", english: { th: 63, pr: 20, total: 83 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 76, pr: 20, total: 96 }, science: { th: 76, pr: 20, total: 96 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 92.4 },
+            { name: "Ankit Kumar Mallick", english: { th: 55, pr: 20, total: 75 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 17, pr: 20, total: 37 }, science: { th: 32, pr: 20, total: 52 }, socialScience: { th: 46, pr: 20, total: 66 }, ai: { th: 31, pr: 50, total: 81 }, percentage: 62.2 },
+            { name: "Ananya Samal", english: { th: 54, pr: 20, total: 74 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS BASIC", th: 28, pr: 20, total: 48 }, science: { th: 19, pr: 20, total: 39 }, socialScience: { th: 31, pr: 20, total: 51 }, ai: { th: 26, pr: 49, total: 75 }, percentage: 60.8 },
+            { name: "Arolipsa Mallik", english: { th: 40, pr: 20, total: 60 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS STANDARD", th: 27, pr: 20, total: 47 }, science: { th: 21, pr: 20, total: 41 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 29, pr: 48, total: 77 }, percentage: 56.0 },
+            { name: "Arpita Jena", english: { th: 66, pr: 20, total: 86 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 77, pr: 20, total: 97 }, socialScience: { th: 72, pr: 20, total: 92 }, ai: { th: 49, pr: 50, total: 99 }, percentage: 91.0 },
+            { name: "Ashutosh Pal", english: { th: 58, pr: 20, total: 78 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 51, pr: 20, total: 71 }, science: { th: 74, pr: 20, total: 94 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 46, pr: 50, total: 96 }, percentage: 84.0 },
+            { name: "Ayushi Senapati", english: { th: 69, pr: 20, total: 89 }, lang2: { name: "HINDI COURSE-A", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS STANDARD", th: 70, pr: 20, total: 90 }, science: { th: 73, pr: 20, total: 93 }, socialScience: { th: 63, pr: 20, total: 83 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 89.4 },
+            { name: "Ayushman Bej", english: { th: 52, pr: 20, total: 72 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 74, pr: 20, total: 94 }, math: { name: "MATHEMATICS STANDARD", th: 26, pr: 20, total: 46 }, science: { th: 46, pr: 20, total: 66 }, socialScience: { th: 51, pr: 20, total: 71 }, ai: { th: 21, pr: 50, total: 71 }, percentage: 69.8 },
+            { name: "Baisakhi P. Mallik", english: { th: 46, pr: 20, total: 66 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 58, pr: 20, total: 78 }, math: { name: "MATHEMATICS STANDARD", th: 65, pr: 20, total: 85 }, science: { th: 54, pr: 20, total: 74 }, socialScience: { th: 42, pr: 20, total: 62 }, ai: { th: 40, pr: 49, total: 89 }, percentage: 73.0 },
+            { name: "Balaram Behra", english: { th: 29, pr: 20, total: 49 }, lang2: { name: "HINDI COURSE-A", th: 39, pr: 20, total: 59 }, math: { name: "MATHEMATICS STANDARD", th: 24, pr: 20, total: 44 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 33, pr: 20, total: 53 }, ai: { th: 17, pr: 49, total: 66 }, percentage: 50.4 },
+            { name: "Barsha Priyadarshinee", english: { th: 59, pr: 20, total: 79 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 61, pr: 20, total: 81 }, science: { th: 56, pr: 20, total: 76 }, socialScience: { th: 59, pr: 20, total: 79 }, ai: { th: 45, pr: 50, total: 95 }, percentage: 77.6 },
+            { name: "Bhargabi Bhabani Jena", english: { th: 43, pr: 20, total: 63 }, lang2: { name: "HINDI COURSE-A", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS STANDARD", th: 18, pr: 20, total: 38 }, science: { th: 53, pr: 20, total: 73 }, socialScience: { th: 44, pr: 20, total: 64 }, ai: { th: 42, pr: 49, total: 91 }, percentage: 64.2 },
+            { name: "Biraj Kumar Mahapatra", english: { th: 63, pr: 20, total: 83 }, lang2: { name: "HINDI COURSE-A", th: 67, pr: 20, total: 87 }, math: { name: "MATHEMATICS STANDARD", th: 62, pr: 20, total: 82 }, science: { th: 68, pr: 20, total: 88 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 84.4 },
+            { name: "Debansi Mohanty", english: { th: 71, pr: 20, total: 91 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 78, pr: 20, total: 98 }, math: { name: "MATHEMATICS STANDARD", th: 67, pr: 20, total: 87 }, science: { th: 57, pr: 20, total: 77 }, socialScience: { th: 50, pr: 20, total: 70 }, ai: { th: 39, pr: 50, total: 89 }, percentage: 84.6 },
+            { name: "Guneet Gaurav Tarai", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 54, pr: 20, total: 74 }, math: { name: "MATHEMATICS STANDARD", th: 20, pr: 20, total: 40 }, science: { th: 47, pr: 20, total: 67 }, socialScience: { th: 52, pr: 20, total: 72 }, ai: { th: 38, pr: 50, total: 88 }, percentage: 66.6 },
+            { name: "Jigyanshu Samantray", english: { th: 34, pr: 20, total: 54 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 41, pr: 20, total: 61 }, math: { name: "MATHEMATICS STANDARD", th: 13, pr: 20, total: 33 }, science: { th: 7, pr: 20, total: 27 }, socialScience: { th: 26, pr: 20, total: 46 }, ai: { th: 18, pr: 48, total: 66 }, percentage: 44.2 },
+            { name: "Jyotiraditya Dey", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "HINDI COURSE-A", th: 49, pr: 20, total: 69 }, math: { name: "MATHEMATICS STANDARD", th: 57, pr: 20, total: 77 }, science: { th: 70, pr: 20, total: 90 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 80.4 },
+            { name: "Meghabarna Patra", english: { th: 72, pr: 20, total: 92 }, lang2: { name: "HINDI COURSE-A", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 60, pr: 20, total: 80 }, science: { th: 65, pr: 20, total: 85 }, socialScience: { th: 75, pr: 20, total: 95 }, ai: { th: 46, pr: 50, total: 96 }, percentage: 86.6 },
+            { name: "Kumari Monika Madhei", english: { th: 54, pr: 20, total: 74 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 40, pr: 20, total: 60 }, science: { th: 55, pr: 20, total: 75 }, socialScience: { th: 55, pr: 20, total: 75 }, ai: { th: 38, pr: 50, total: 88 }, percentage: 71.4 },
+            { name: "Muskan Pradhan", english: { th: 70, pr: 20, total: 90 }, lang2: { name: "HINDI COURSE-A", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS STANDARD", th: 30, pr: 20, total: 50 }, science: { th: 58, pr: 20, total: 78 }, socialScience: { th: 71, pr: 20, total: 91 }, ai: { th: 32, pr: 50, total: 82 }, percentage: 78.6 },
+            { name: "Om Mishra", english: { th: 40, pr: 20, total: 60 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 27, pr: 20, total: 47 }, science: { th: 28, pr: 20, total: 48 }, socialScience: { th: 46, pr: 20, total: 66 }, ai: { th: 31, pr: 50, total: 81 }, percentage: 60.4 },
+            { name: "Omm Narayn Pattnaik", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 60, pr: 20, total: 80 }, science: { th: 54, pr: 20, total: 74 }, socialScience: { th: 68, pr: 20, total: 88 }, ai: { th: 34, pr: 50, total: 84 }, percentage: 84.0 },
+            { name: "Piyush Swain", english: { th: 43, pr: 20, total: 63 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 71, pr: 20, total: 91 }, math: { name: "MATHEMATICS STANDARD", th: 19, pr: 20, total: 39 }, science: { th: 45, pr: 20, total: 65 }, socialScience: { th: 49, pr: 20, total: 69 }, ai: { th: 29, pr: 49, total: 78 }, percentage: 65.4 },
+            { name: "Pratik Kumar Sahoo", english: { th: 51, pr: 20, total: 71 }, lang2: { name: "HINDI COURSE-A", th: 47, pr: 20, total: 67 }, math: { name: "MATHEMATICS STANDARD", th: 44, pr: 20, total: 64 }, science: { th: 58, pr: 20, total: 78 }, socialScience: { th: 62, pr: 20, total: 82 }, ai: { th: 39, pr: 49, total: 88 }, percentage: 72.4 },
+            { name: "Pratikshya Priyadarsini", english: { th: 65, pr: 20, total: 85 }, lang2: { name: "HINDI COURSE-A", th: 53, pr: 20, total: 73 }, math: { name: "MATHEMATICS STANDARD", th: 23, pr: 20, total: 43 }, science: { th: 59, pr: 20, total: 79 }, socialScience: { th: 66, pr: 20, total: 86 }, ai: { th: 34, pr: 48, total: 82 }, percentage: 73.2 },
+            { name: "Pratima Dash", english: { th: 47, pr: 20, total: 67 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS BASIC", th: 26, pr: 20, total: 46 }, science: { th: 20, pr: 20, total: 40 }, socialScience: { th: 60, pr: 20, total: 80 }, ai: { th: 28, pr: 48, total: 76 }, percentage: 63.2 },
+            { name: "Pratyush Kumar Sahoo", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 75, pr: 20, total: 95 }, math: { name: "MATHEMATICS STANDARD", th: 39, pr: 20, total: 59 }, science: { th: 60, pr: 20, total: 80 }, socialScience: { th: 65, pr: 20, total: 85 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 80.6 },
+            { name: "Pratyusha Prusty", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "HINDI COURSE-A", th: 56, pr: 20, total: 76 }, math: { name: "MATHEMATICS STANDARD", th: 51, pr: 20, total: 71 }, science: { th: 62, pr: 20, total: 82 }, socialScience: { th: 47, pr: 20, total: 67 }, ai: { th: 37, pr: 50, total: 87 }, percentage: 75.4 },
+            { name: "Pritinsa Rout", english: { th: 47, pr: 20, total: 67 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 47, pr: 20, total: 67 }, science: { th: 44, pr: 20, total: 64 }, socialScience: { th: 36, pr: 20, total: 56 }, ai: { th: 39, pr: 49, total: 88 }, percentage: 70.8 },
+            { name: "Purnima Priydarshini Lenka", english: { th: 76, pr: 20, total: 96 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 79, pr: 20, total: 99 }, math: { name: "MATHEMATICS STANDARD", th: 55, pr: 20, total: 75 }, science: { th: 67, pr: 20, total: 87 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 89.4 },
+            { name: "Ratikanta Gouda", english: { th: 38, pr: 20, total: 58 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 70, pr: 20, total: 90 }, math: { name: "MATHEMATICS STANDARD", th: 8, pr: 20, total: 28 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 18, pr: 47, total: 65 }, percentage: 54.6 },
+            { name: "Risav Mohanty", english: { th: 68, pr: 20, total: 88 }, lang2: { name: "HINDI COURSE-A", th: 65, pr: 20, total: 85 }, math: { name: "MATHEMATICS BASIC", th: 63, pr: 20, total: 83 }, science: { th: 66, pr: 20, total: 86 }, socialScience: { th: 64, pr: 20, total: 84 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 85.2 },
+            { name: "Ronit Kumar Sethi", english: { th: 62, pr: 20, total: 82 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 78, pr: 20, total: 98 }, math: { name: "MATHEMATICS STANDARD", th: 7, pr: 20, total: 27 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 35, pr: 20, total: 55 }, ai: { th: 33, pr: 50, total: 83 }, percentage: 61.8 },
+            { name: "Sai Ram Mohanty", english: { th: 56, pr: 20, total: 76 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 71, pr: 20, total: 91 }, math: { name: "MATHEMATICS STANDARD", th: 28, pr: 20, total: 48 }, science: { th: 47, pr: 20, total: 67 }, socialScience: { th: 48, pr: 20, total: 68 }, ai: { th: 25, pr: 49, total: 74 }, percentage: 70.0 },
+            { name: "Saisrita Mohanty", english: { th: 64, pr: 20, total: 84 }, lang2: { name: "HINDI COURSE-A", th: 63, pr: 20, total: 83 }, math: { name: "MATHEMATICS BASIC", th: 30, pr: 20, total: 50 }, science: { th: 25, pr: 20, total: 45 }, socialScience: { th: 54, pr: 20, total: 74 }, ai: { th: 34, pr: 49, total: 83 }, percentage: 67.2 },
+            { name: "Sanchita Parida", english: { th: 76, pr: 20, total: 96 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 78, pr: 20, total: 98 }, science: { th: 72, pr: 20, total: 92 }, socialScience: { th: 65, pr: 20, total: 85 }, ai: { th: 48, pr: 50, total: 98 }, percentage: 94.2 },
+            { name: "Sarmistha Rout", english: { th: 50, pr: 20, total: 70 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 76, pr: 20, total: 96 }, math: { name: "MATHEMATICS BASIC", th: 29, pr: 20, total: 49 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 50, pr: 20, total: 70 }, ai: { th: 27, pr: 49, total: 76 }, percentage: 66.8 },
+            { name: "Shamuka Naik", english: { th: 34, pr: 20, total: 54 }, lang2: { name: "HINDI COURSE-A", th: 30, pr: 20, total: 50 }, math: { name: "MATHEMATICS STANDARD", th: 17, pr: 20, total: 37 }, science: { th: 27, pr: 20, total: 47 }, socialScience: { th: 32, pr: 20, total: 52 }, ai: { th: 31, pr: 47, total: 78 }, percentage: 48.0 },
+            { name: "Shri Shreyash Swain", english: { th: 61, pr: 20, total: 81 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 77, pr: 20, total: 97 }, math: { name: "MATHEMATICS STANDARD", th: 42, pr: 20, total: 62 }, science: { th: 55, pr: 20, total: 75 }, socialScience: { th: 70, pr: 20, total: 90 }, ai: { th: 41, pr: 49, total: 90 }, percentage: 81.0 },
+            { name: "Shreyashi Swain", english: { th: 66, pr: 20, total: 86 }, lang2: { name: "HINDI COURSE-A", th: 61, pr: 20, total: 81 }, math: { name: "MATHEMATICS STANDARD", th: 48, pr: 20, total: 68 }, science: { th: 53, pr: 20, total: 73 }, socialScience: { th: 45, pr: 20, total: 65 }, ai: { th: 41, pr: 48, total: 89 }, percentage: 74.6 },
+            { name: "Sonali Ipsita", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "HINDI COURSE-A", th: 64, pr: 20, total: 84 }, math: { name: "MATHEMATICS BASIC", th: 54, pr: 20, total: 74 }, science: { th: 51, pr: 20, total: 71 }, socialScience: { th: 73, pr: 20, total: 93 }, ai: { th: 41, pr: 50, total: 91 }, percentage: 80.4 },
+            { name: "Soumya Ranjan Jena", english: { th: 37, pr: 20, total: 57 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 52, pr: 20, total: 72 }, math: { name: "MATHEMATICS STANDARD", th: 10, pr: 20, total: 30 }, science: { th: 14, pr: 20, total: 34 }, socialScience: { th: 28, pr: 20, total: 48 }, ai: { th: 17, pr: 47, total: 64 }, percentage: 48.2 },
+            { name: "Sudhansu Sekhar Rout", english: { th: 59, pr: 20, total: 79 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 72, pr: 20, total: 92 }, math: { name: "MATHEMATICS STANDARD", th: 48, pr: 20, total: 68 }, science: { th: 49, pr: 20, total: 69 }, socialScience: { th: 55, pr: 20, total: 75 }, ai: { th: 19, pr: 49, total: 68 }, percentage: 76.6 },
+            { name: "Sunandan Jena", english: { th: 27, pr: 20, total: 47 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 35, pr: 20, total: 55 }, math: { name: "MATHEMATICS STANDARD", th: 15, pr: 20, total: 35 }, science: { th: 29, pr: 20, total: 49 }, socialScience: { th: 31, pr: 20, total: 51 }, ai: { th: 17, pr: 49, total: 66 }, percentage: 47.4 },
+            { name: "Supritam Panigrahi", english: { th: 75, pr: 20, total: 95 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 80, pr: 20, total: 100 }, math: { name: "MATHEMATICS STANDARD", th: 80, pr: 20, total: 100 }, science: { th: 77, pr: 20, total: 97 }, socialScience: { th: 77, pr: 20, total: 97 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 97.8 },
+            { name: "Suraj Pattnaik", english: { th: 72, pr: 20, total: 92 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 76, pr: 20, total: 96 }, math: { name: "MATHEMATICS STANDARD", th: 73, pr: 20, total: 93 }, science: { th: 72, pr: 20, total: 92 }, socialScience: { th: 78, pr: 20, total: 98 }, ai: { th: 50, pr: 50, total: 100 }, percentage: 94.2 },
+            { name: "Suvoshree Kumari", english: { th: 60, pr: 20, total: 80 }, lang2: { name: "SANSKRIT (COMMUNICATIVE)", th: 73, pr: 20, total: 93 }, math: { name: "MATHEMATICS BASIC", th: 53, pr: 20, total: 73 }, science: { th: 59, pr: 20, total: 79 }, socialScience: { th: 47, pr: 20, total: 67 }, ai: { th: 33, pr: 50, total: 83 }, percentage: 78.4 }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordOverlay = document.getElementById('password-protection-overlay');
+            const passwordInput = document.getElementById('password-input');
+            const passwordSubmit = document.getElementById('password-submit');
+            const passwordError = document.getElementById('password-error');
+            const dashboardContentEl = document.getElementById('dashboard-content');
+
+            passwordSubmit.addEventListener('click', checkPassword);
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission if it were in a form
+                    checkPassword();
+                }
+            });
+
+            function checkPassword() {
+                if (passwordInput.value === CORRECT_PASSWORD) {
+                    passwordOverlay.style.display = 'none';
+                    dashboardContentEl.style.display = 'flex'; // Show dashboard
+                    document.body.style.justifyContent = 'flex-start'; // Align body content to top
+                    loadDashboard();
+                } else {
+                    passwordError.style.display = 'block';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                     // Add a shake animation for error
+                    passwordInput.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        passwordInput.style.animation = '';
+                    }, 500);
+                }
+            }
+             // CSS for shake animation (could be in <style> or a class)
+            const styleSheet = document.createElement("style")
+            styleSheet.type = "text/css"
+            styleSheet.innerText = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    50% { transform: translateX(5px); }
+                    75% { transform: translateX(-5px); }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+
+            function loadDashboard() {
+                const dashboardHTML = `
+                    <div class="container">
+                        <header>
+                            <h1>Student Performance Dashboard</h1>
+                            <input type="text" id="search-bar" placeholder="Search by student name or subject...">
+                        </header>
+                        <main>
+                            <div id="students-grid" class="students-grid">
+                                <!-- Student cards will be injected here -->
+                            </div>
+                        </main>
+                        <footer>
+                            <p>&copy; ${new Date().getFullYear()} Student Analytics. All rights reserved.</p>
+                        </footer>
+                    </div>
+                `;
+                dashboardContentEl.innerHTML = dashboardHTML;
+
+                // Re-query elements now that they are in the DOM
+                const studentsGrid = document.getElementById('students-grid');
+                const searchBar = document.getElementById('search-bar');
+
+                const subjectIcons = {
+                    'English': '📖',
+                    'Language 2': '🗣️',
+                    'Mathematics': '📐',
+                    'Science': '🔬',
+                    'Social Sc.': '🌍',
+                    'AI (Addl.)': '🤖'
+                };
+
+                function getProgressBarColor(marks, isAI = false) {
+                    const rootStyles = getComputedStyle(document.documentElement);
+                    if (isAI) return rootStyles.getPropertyValue('--ai-color').trim();
+                    if (marks >= 75) return rootStyles.getPropertyValue('--green').trim();
+                    if (marks >= 40) return rootStyles.getPropertyValue('--orange').trim();
+                    return rootStyles.getPropertyValue('--red').trim();
+                }
+                
+                function createSubjectElement(subjectKey, subjectNameDisplay, subjectData, isAI = false) {
+                    const subjectDiv = document.createElement('div');
+                    subjectDiv.classList.add('subject');
+
+                    const totalMarks = subjectData.total;
+                    const percentageOfSubject = totalMarks; // Max is 100
+                    const progressBarColor = getProgressBarColor(totalMarks, isAI);
+                    const icon = subjectIcons[subjectNameDisplay] || '📚';
+
+
+                    subjectDiv.innerHTML = `
+                        <div class="subject-info">
+                            <span class="subject-name">
+                                <span class="subject-icon">${icon}</span>
+                                ${subjectNameDisplay} ${subjectData.name ? `(${subjectData.name.split(' ')[0]})` : ''}
+                            </span>
+                            <span class="subject-marks">Th:${subjectData.th}, Pr:${subjectData.pr} | Total: ${totalMarks}/100</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="background-color: ${progressBarColor};" data-total="${percentageOfSubject}">
+                                ${percentageOfSubject}%
+                            </div>
+                        </div>
+                    `;
+                    return subjectDiv;
+                }
+
+                function displayStudents(studentsToDisplay) {
+                    studentsGrid.innerHTML = ''; 
+
+                    if (studentsToDisplay.length === 0) {
+                        studentsGrid.innerHTML = '<div class="no-results"><p>No students found matching your search.</p></div>';
+                        return;
+                    }
+                    
+                    studentsToDisplay.forEach((student, index) => {
+                        const card = document.createElement('div');
+                        card.classList.add('student-card');
+                        card.style.animationDelay = `${index * 0.07}s`;
+
+                        card.innerHTML = `
+                            <div class="student-card-header">
+                                <h2>${student.name}</h2>
+                                <div class="overall-percentage-container">
+                                    <div class="percentage-circle">
+                                        <span class="percentage">${student.percentage.toFixed(1)}</span>
+                                    </div>
+                                    <span>Overall</span>
+                                </div>
+                            </div>
+                            <div class="subjects-list">
+                                <!-- Subjects will be appended here -->
+                            </div>
+                        `;
+                        
+                        const subjectsList = card.querySelector('.subjects-list');
+                        subjectsList.appendChild(createSubjectElement('english', 'English', student.english));
+                        subjectsList.appendChild(createSubjectElement('lang2','Language 2', student.lang2));
+                        subjectsList.appendChild(createSubjectElement('math','Mathematics', student.math));
+                        subjectsList.appendChild(createSubjectElement('science','Science', student.science));
+                        subjectsList.appendChild(createSubjectElement('socialScience','Social Sc.', student.socialScience));
+                        subjectsList.appendChild(createSubjectElement('ai','AI (Addl.)', student.ai, true));
+                        
+                        studentsGrid.appendChild(card);
+
+                        setTimeout(() => {
+                            const progressBars = card.querySelectorAll('.progress-bar');
+                            progressBars.forEach(pb => {
+                                pb.style.width = `${pb.dataset.total}%`;
+                            });
+                        }, 50 + index * 70); 
+                    });
+                }
+
+                searchBar.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    const filteredStudents = studentData.filter(student => {
+                        if (student.name.toLowerCase().includes(searchTerm)) {
+                            return true;
+                        }
+                        // Check subject names and types
+                        const subjects = ['english', 'lang2', 'math', 'science', 'socialScience', 'ai'];
+                        for (const key of subjects) {
+                            const subjectInfo = student[key];
+                            if (subjectInfo.name && subjectInfo.name.toLowerCase().includes(searchTerm)) return true;
+                            if (key.toLowerCase().includes(searchTerm)) return true; // e.g. search "math"
+                        }
+                        return false;
+                    });
+                    displayStudents(filteredStudents);
+                });
+
+                displayStudents(studentData); // Initial display
+            }
+        });
+    </script>
+</body>
+</html>
